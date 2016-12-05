@@ -14,6 +14,7 @@
 using namespace std;
 
 int N,num;
+string part[max];//分割子集
 
 struct edge {
 	string first;
@@ -138,6 +139,84 @@ void makedfa(edge* NFA_e,edge* DFA_e,string* T, string choice,int& num) {
 	}
 }
 
+bool isexist(string s, string d)
+{
+	if (d != "" && 0 <= d.find(s) && d.find(s) <= d.length() - 1)
+		return 1;
+	else
+		return 0;
+}
+//分割子集法进行DFA的最小化 
+int divide(edge *e, string choice)
+{
+	int x, m, flag = 2, flag0, i, j;
+	string ss, part0[max];
+	flag0 = flag;
+	for (x = 0; x<choice.length(); x++)  //遍历有穷字母表 
+	{
+		for (m = 0; m<flag0; m++)       //遍历各个划分的集合 
+		{
+			for (i = 0; i<part[m].length(); i++)
+			{
+				ss = sub(part[m].substr(i, 1), choice[x], e);     //一个状态可以通过choice能够到的所有状态 
+				for (j = 0; j<flag; j++)
+				{
+					if (isexist(ss, part[j]))part0[j] = part0[j] + part[m].substr(i, 1);
+					if (ss == "&")
+					{
+						part0[flag] = part0[flag] + part[m].substr(i, 1);
+						break;
+					}
+				}
+			}
+			for (j = 0; j <= flag; j++)
+			{
+				if (part0[j] != ""&&part0[j] != part[m])
+				{
+					part[flag++] = part0[j];
+					part0[j] = "";
+					part[m] = "";
+				}
+				else
+					part0[j] = "";
+			}
+		}
+		flag0 = flag;
+	}
+	cout << "此DFA最小化划分的子集如下：" << endl;
+	for (i = 0; i<flag; i++)
+	{
+		if (part[i] != "")
+			cout << part[i] << endl;
+	}
+	cout << "用状态A,B,C···等代替子集：";
+	for (i = 0; i<flag; i++)
+	{
+		if (part[i] != "")cout << "{" << part[i] << "},";
+	}
+	cout << endl << "则DFA最小化后的各边信息如下：" << endl;
+	char letters[max];
+	char letter = 'A';
+	for (i = 0; i<flag; i++)
+	{
+		if (part[i] != "")
+		{
+			letters[i] = letter;
+			++letter;
+		}
+	}
+	for (i = 0; i<flag; i++)
+		for (j = 0; j<choice.length(); j++)
+		{
+			ss = sub(part[i], choice[j], e);
+			if (part[i] != ""&&ss != "&")cout << letters[i] << "  " << choice[j] << "  ";
+			for (x = 0; x<flag; x++)
+				if (isexist(ss.substr(0, 1), part[x]))cout << letters[x] << endl;
+		}
+
+	return flag;
+}
+
 int main() {
 	string first, end;
 	string choice;
@@ -173,6 +252,38 @@ int main() {
 	T[0] = sort(T[0]);
 	move(NFA_e, choice, T, num);
 	makedfa(NFA_e, DFA_e, T, choice,num);
+	flag = divide(DFA_e, choice);  
+	/*cout << "此DFA最小化划分的子集如下：" << endl;
+	for (i = 0; i<flag; i++)
+	{
+		if (part[i] != "")
+			cout << part[i] << endl;
+	}
+	cout << "用状态A,B,C···等代替子集：";
+	for (i = 0; i<flag; i++)
+	{
+		if (part[i] != "")cout << "{" << part[i] << "},";
+	}
+	cout << endl << "则DFA最小化后的各边信息如下：" << endl;
+	char letters[max];
+	char letter = 'A';
+	for (i = 0; i<flag; i++)
+	{
+		if (part[i] != "")
+		{
+			letters[i] = letter;
+			++letter;
+		}
+	}
+	for (i = 0; i<flag; i++)
+		for (j = 0; j<choice.length(); j++)
+		{
+			ss = sub(part[i], choice[j], e);
+			if (part[i] != ""&&ss != "&")cout << letters[i] << "  " << choice[j] << "  ";
+			for (x = 0; x<flag; x++)
+				if (isexist(ss.substr(0, 1), part[x]))cout << letters[x] << endl;
+		}
+*/
 	system("pause");
 	return 0;
 
